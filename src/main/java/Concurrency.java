@@ -1,7 +1,4 @@
-package org.example;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Concurrency {
 
@@ -91,14 +88,17 @@ public class Concurrency {
 }
 
 class SomeClass{
-    private static int value = 0;
+    // volatile - чтобы какой-то поток не хэшировал эту переменную, а мен€л еЄ
+    // јтомарные типы содержат методы, позвол€ющие выполн€ть арифметические операции в 1 операцию, а не в 3, как обычно:
+    // получение значени€, его изменение, запись обратно.
+    private volatile static AtomicInteger value = new AtomicInteger(0);
 
     public static void main(String[] args) {
         Thread inc = new Thread(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i<1000000; i++){
-                    SomeClass.value++;
+                    inc();
                 }
             }
         });
@@ -106,7 +106,7 @@ class SomeClass{
             @Override
             public void run() {
                 for (int i = 0; i<1000000; i++){
-                    SomeClass.value--;
+                    dec();
                 }
             }
         });
@@ -118,7 +118,15 @@ class SomeClass{
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        /** »з-за Race Condition здесь могут выходить разные значени€*/
+        /** »з-за Race Condition здесь могут выходить разные значени€ */
         System.out.println(value);
+    }
+
+    public static void inc(){
+        value.getAndIncrement();
+    }
+
+    public static void dec(){
+        value.getAndDecrement();
     }
 }
